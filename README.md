@@ -1,55 +1,50 @@
 # Time Tracker — CLI Project Time Logger
 
-A tiny Bash script to track time you spend on projects from the command line. Start a timer, stop it, and sessions are appended to a CSV you can open in any spreadsheet app.
+A tiny Bash tool for timing work on projects from your terminal. Start a timer, stop it, and your sessions are saved to a CSV file you can open in any spreadsheet app.
 
 - Commands: `start`, `end`, `status`, `help`
-- Data file: `$HOME/time.csv`
+- Default CSV: `$HOME/time.csv`
 - Temp state: `$HOME/.time_track_temp`
-- Cross-platform: macOS (BSD `date`) + Linux (GNU `date`)
-
-Repository: **https://github.com/Scoyou/time_tracker**
+- Works on macOS and Linux
 
 ---
 
-## Installation
+## Install
 
-### Option A — Homebrew (recommended)
+### Homebrew
+Install the published formula from the public tap:
 
-This project ships a Homebrew formula in your personal tap. The script in the repo is `time_track.sh` and is installed as the command `tt` to avoid clashing with the system `time` utility.
-
-Install from your tap:
 ```bash
-brew install Scoyou/tap/time-tracker
+brew install Scoyou/tools/time-tracker
 ```
 
-Install the latest commit from `main` (no tag required):
+Install the latest development version:
+
 ```bash
-brew install --HEAD Scoyou/tap/time-tracker
+brew install --HEAD Scoyou/tools/time-tracker
 ```
 
-Upgrade to a newer version (after you publish a new tag and bump the formula):
+Upgrade later:
 ```bash
-brew upgrade Scoyou/tap/time-tracker
+brew upgrade Scoyou/tools/time-tracker
 ```
 
 Uninstall:
 ```bash
-brew uninstall Scoyou/tap/time-tracker
+brew uninstall Scoyou/tools/time-tracker
 ```
 
-> On Apple Silicon, Homebrew is under `/opt/homebrew`. The commands above work the same on Intel or Apple Silicon.
+> The installed command is `tt`.
 
-### Option B — Manual install (no Homebrew)
-
-Copy the script somewhere on your `PATH` and name it `tt`:
+### Manual (no Homebrew)
+Download the script and place it on your PATH:
 ```bash
 mkdir -p "$HOME/bin"
-cp time_track.sh "$HOME/bin/tt"
+curl -L -o "$HOME/bin/tt" https://raw.githubusercontent.com/Scoyou/time_tracker/main/time_track.sh
 chmod +x "$HOME/bin/tt"
 
-# Add to PATH if needed (choose your shell)
-echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"   # bash
-echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.zshrc"    # zsh
+# Add to PATH if needed
+echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.zshrc"   # or ~/.bashrc
 ```
 
 ---
@@ -63,7 +58,7 @@ tt end --project bcd-1234
 tt --help
 ```
 
-Sample output:
+Example output:
 ```
 [✓] Started tracking for 'bcd-1234' at 2025-09-05 10:42 AM
 [✓] Ended tracking for 'bcd-1234' at 2025-09-05 11:17 AM
@@ -72,7 +67,7 @@ Sample output:
 
 ---
 
-## Usage reference
+## Usage
 
 ```
 Time Tracker - CLI Project Time Logger
@@ -100,38 +95,41 @@ Examples:
   ```
 
 - **Temp state**: `~/.time_track_temp`  
-  Stores active sessions in `project|start_time` format (one per active project).
+  Each active timer is stored as `project|start_time` on its own line.
 
-> Tip: Pretty-print the CSV:
-> ```bash
-> column -s, -t < "$HOME/time.csv" | less -S
-> ```
+Tip: Pretty-print the CSV in the terminal:
+```bash
+column -s, -t < "$HOME/time.csv" | less -S
+```
 
 ---
 
 ## Configuration
 
-Edit the constants at the top of the script:
+Edit the variables at the top of the script to change file locations or time format:
+
 ```bash
 CSV_FILE="$HOME/time.csv"           # where sessions are logged
 TEMP_FILE="$HOME/.time_track_temp"  # stores active timers
 DATE_FORMAT="+%Y-%m-%d %I:%M %p"    # e.g., 2025-09-05 03:14 PM
 ```
-- Prefer 24-hour time: `DATE_FORMAT="+%Y-%m-%d %H:%M"`
-- Log to cloud storage: `CSV_FILE="$HOME/Dropbox/time.csv"`
+
+Suggestions:
+- 24‑hour time: `DATE_FORMAT="+%Y-%m-%d %H:%M"`
+- Save to cloud storage: `CSV_FILE="$HOME/Dropbox/time.csv"`
 
 ---
 
 ## How it works
 
-- **start** → appends `project|<formatted time>` to the temp file (multiple projects may run concurrently; duplicates for the *same* project are blocked).
-- **end** → reads start time, converts to epoch, computes duration to “now,” writes a CSV row, removes the temp entry.
-- **status** → prints a table of active timers.
+- `start` adds a line `project|<formatted time>` to the temp file. Multiple projects can run simultaneously; starting the same project twice is blocked.
+- `end` reads the start time, converts to epoch seconds, computes the duration to “now,” writes a CSV row, and removes the temp entry.
+- `status` prints a table of active timers.
 
-Time parsing tries **macOS** (BSD) first, then **GNU** (Linux):
+Time parsing supports both macOS and Linux:
 ```bash
-# macOS path (BSD date)
-date -j -f "%Y-%m-%d %I:%M %p" "$start" "+%s" || # GNU path (Linux)
+# macOS (BSD date)
+date -j -f "%Y-%m-%d %I:%M %p" "$start" "+%s" || # Linux (GNU date)
 date -d "$start" "+%s"
 ```
 
@@ -139,33 +137,34 @@ date -d "$start" "+%s"
 
 ## Troubleshooting
 
-- **Project already tracked**: Use `status` to confirm; stop with `end` before starting again.
-- **No start time found**: There is no active entry in `~/.time_track_temp`.
-- **Date parse errors**: Ensure `DATE_FORMAT` matches the stored start time format if you have modified it.
-- **Permissions**: `chmod +x` and confirm the binary is on your PATH.
-- **Name clash**: The command `time` conflicts with the system tool. This project uses `tt`.
+- **“Project 'X' is already being tracked.”**  
+  A timer for that project is already running. See `tt status` or run `tt end --project X`.
+
+- **“No start time found for project 'X'.”**  
+  There’s no active entry for that project. Start a new timer with `tt start --project X`.
+
+- **Date parse errors**  
+  If you changed `DATE_FORMAT`, make sure it matches the format stored in the temp file.
+
+- **Command not found**  
+  If you installed manually, ensure `tt` is executable and on your PATH.
+
+---
+
+## Compatibility
+
+- **OS**: macOS and Linux
+- **Shell**: Bash
+- **Dependencies**: Standard Unix tools (`date`, `grep`, `cut`, `printf`, `mv`)
+
+---
+
+## Privacy
+
+All data stays on your machine. The tool writes a single CSV file (`~/time.csv`) and a small temp file (`~/.time_track_temp`).
+
+---
 
 ## License
 
-MIT License
-
-Copyright (c) 2025 Scoyou
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
+MIT — see the `LICENSE` file for details.
