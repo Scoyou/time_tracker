@@ -150,7 +150,7 @@ end_tracking() {
   local duration="${hours}h ${minutes}m"
 
   ensure_csv_header
-  printf "%s,%s,%s,%s,%s\n" "$project" "$start_human" "$end_human" "$duration_seconds" "$duration" >> "$CSV_FILE"
+  printf "%s,%s,%s,%s,%s\n" "$project" "$start_human" "$end_human" "$duration" >> "$CSV_FILE"
 
   echo "[✓] Ended tracking for '$project' at $end_human"
   echo "[⏱] Duration: $duration"
