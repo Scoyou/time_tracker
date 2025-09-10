@@ -66,7 +66,7 @@ validate_project() {
 
 ensure_csv_header() {
   if [ ! -f "$CSV_FILE" ]; then
-    printf "project,start,end,duration_seconds,duration\n" > "$CSV_FILE"
+    printf "project,start,end,duration\n" > "$CSV_FILE"
   fi
 }
 
